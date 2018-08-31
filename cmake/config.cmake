@@ -44,6 +44,7 @@ set(OMR_TEST_COMPILER OFF CACHE BOOL "Enable building the test compiler")
 set(OMR_THREAD ON CACHE BOOL "Enable thread library")
 set(OMR_TOOLS ON CACHE BOOL "Enable the native build tools")
 set(OMR_RAS_TDF_TRACE ON CACHE BOOL "Enable trace engine")
+set(OMR_OM OFF CACHE BOOL "Enable the Om GC object library")
 
 ###
 ### Testing Flags
