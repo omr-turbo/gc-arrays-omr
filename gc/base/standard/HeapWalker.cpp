@@ -33,13 +33,20 @@
 #include "HeapRegionManager.hpp"
 #include "MemorySubSpace.hpp"
 #include "ObjectHeapIteratorAddressOrderedList.hpp"
-#include "ObjectIterator.hpp"
+
 #include "ObjectModel.hpp"
 #include "OMRVMInterface.hpp"
-#include "SlotObject.hpp"
+
 #include "SublistIterator.hpp"
 #include "SublistSlotIterator.hpp"
 #include "Task.hpp"
+
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+#include <OMRClient/GC/ObjectScanner.hpp>
+#else // OMR_GC_EXPERIMENTAL_OBJECT_SCANNER
+#include "ObjectIterator.hpp"
+#include "SlotObject.hpp"
+#endif // OMR_GC_EXPERIMENTAL_OBJECT_SCANNER
 
 /**
  * Auxilary structure too pass both function and userData as one param to heap walker
@@ -49,6 +56,24 @@ struct SlotObjectDoUserData {
 	void *userData;
 	uintptr_t oSlotWalkFlag;
 };
+
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+
+struct HeapWalkerObjectVisitor {
+	template <typename SlotHandleT>
+	bool edge(void* object, SlotHandleT&& slot) {
+		omrobjectptr_t value = slot.readReference();
+		func(vm, &value, data, 0);
+		slot.writeReference(value);
+		return true;
+	}
+
+	OMR_VM* vm;
+	MM_HeapWalkerSlotFunc func;
+	void* data;
+};
+
+#else /* OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */
 
 /**
  * apply the user function to object field
@@ -65,6 +90,7 @@ heapWalkerObjectFieldSlotDo(OMR_VM *omrVM, omrobjectptr_t object, GC_SlotObject 
 	slotObject->writeReferenceToSlot(fieldValue);
 }
 
+#endif /* !OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */
 
 /**
  * walk through slots of mixed object and apply the user function.
@@ -72,12 +98,23 @@ heapWalkerObjectFieldSlotDo(OMR_VM *omrVM, omrobjectptr_t object, GC_SlotObject 
 static void
 heapWalkerObjectSlotDo(OMR_VM *omrVM, omrobjectptr_t object, MM_HeapWalkerSlotFunc oSlotIterator, void *localUserData)
 {
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+	HeapWalkerObjectVisitor visitor;
+	visitor.vm = omrVM;
+	visitor.func = oSlotIterator;
+	visitor.data = localUserData;
+
+	OMRClient::GC::ObjectScanner scanner = MM_GCExtensionsBase::getExtensions(omrVM)->objectModel.makeObjectScanner();
+	OMR::GC::ScanResult result = scanner.start(visitor, object);
+	assert(result.complete);
+#else /* OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */
 	GC_ObjectIterator objectIterator(omrVM, object);
 	GC_SlotObject *slotObject;
 
 	while ((slotObject = objectIterator.nextSlot()) != NULL) {
 		heapWalkerObjectFieldSlotDo(omrVM, object, slotObject, oSlotIterator, localUserData);
 	}
+#endif /* OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */
 }
 
 /**

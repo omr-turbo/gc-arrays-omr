@@ -23,6 +23,7 @@ set(OMR_GC_GLUE_TARGET "omr_example_gc_glue" CACHE STRING "The gc glue target, m
 set(OMR_UTIL_GLUE_TARGET "omr_example_util_glue" CACHE STRING "The util glue target, must be interface library" FORCE)
 set(OMR_RAS_GLUE_TARGET "omr_example_ras_glue" CACHE STRING "The ras glue target, must be interface library" FORCE)
 set(OMR_CORE_GLUE_TARGET "omr_example_core_glue" CACHE STRING "The core glue target, must be and interface library" FORCE)
+set(OMR_STARTUP_GLUE_TARGET "omr_example_startup_glue" CACHE STRING "The startup glue target, must be an interface library" FORCE)
 
 add_library(omr_example_gc_glue INTERFACE)
 
@@ -30,15 +31,20 @@ target_sources(omr_example_gc_glue INTERFACE
 	${CMAKE_CURRENT_SOURCE_DIR}/CollectorLanguageInterfaceImpl.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/CompactSchemeFixupObject.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/ConcurrentMarkingDelegate.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/EnvironmentDelegate.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/FrequentObjectsStats.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/GlobalCollectorDelegate.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/MarkingDelegate.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/ObjectIterator.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/ObjectModelDelegate.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/StartupManagerImpl.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/VerboseManagerImpl.cpp
 )
+
+if(NOT OMR_GC_EXPERIMENTAL_CONTEXT)
+	target_sources(omr_example_gc_glue INTERFACE
+		${CMAKE_CURRENT_SOURCE_DIR}/EnvironmentDelegate.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/MarkingDelegate.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/ObjectIterator.cpp
+	)
+endif(NOT OMR_GC_EXPERIMENTAL_CONTEXT)
 
 target_link_libraries(omr_example_gc_glue
 	INTERFACE
@@ -69,12 +75,15 @@ target_link_libraries(omr_example_ras_glue
 
 add_library(omr_example_core_glue INTERFACE)
 
-target_sources(omr_example_core_glue INTERFACE
-	${CMAKE_CURRENT_SOURCE_DIR}/LanguageVMGlue.c
-	${CMAKE_CURRENT_SOURCE_DIR}/omrExampleVM.cpp
+target_sources(omr_example_core_glue 
+	INTERFACE
+		${CMAKE_CURRENT_SOURCE_DIR}/LanguageVMGlue.c
+		${CMAKE_CURRENT_SOURCE_DIR}/omrExampleVM.cpp
 )
 
 target_link_libraries(omr_example_core_glue
 	INTERFACE
 		omr_example_base
 )
+
+add_library(omr_example_startup_glue INTERFACE)

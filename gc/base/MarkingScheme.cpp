@@ -294,6 +294,12 @@ MM_MarkingScheme::setMarkBitsInRange(MM_EnvironmentBase *env, void *heapBase, vo
 uintptr_t
 MM_MarkingScheme::scanObject(MM_EnvironmentBase *env, omrobjectptr_t objectPtr)
 {
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+	OMRClient::GC::ObjectScanner scanner = env->getExtensions()->objectModel.makeObjectScanner();
+	OMR::GC::ScanResult result = scanner.start(MarkingVisitor(env, this), objectPtr);
+	assert(result.complete);
+	return result.bytesScanned;
+#else /* OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */
 	uintptr_t sizeToDo = UDATA_MAX;
 	GC_ObjectScannerState objectScannerState;
 	GC_ObjectScanner *objectScanner = _delegate.getObjectScanner(env, objectPtr, &objectScannerState, SCAN_REASON_PACKET, &sizeToDo);
@@ -311,6 +317,7 @@ MM_MarkingScheme::scanObject(MM_EnvironmentBase *env, omrobjectptr_t objectPtr)
 		}
 	}
 	return sizeToDo;
+#endif /* OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */
 }
 
 
@@ -428,6 +435,8 @@ MM_MarkingScheme::assertNotForwardedPointer(MM_EnvironmentBase *env, omrobjectpt
 	}
 }
 
+#if !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+// TODO: Fixup is not yet implemented in terms of SlotHandleT
 void
 MM_MarkingScheme::fixupForwardedSlotOutline(GC_SlotObject *slotObject) {
 #if defined(OMR_GC_CONCURRENT_SCAVENGER)
@@ -445,3 +454,4 @@ MM_MarkingScheme::fixupForwardedSlotOutline(GC_SlotObject *slotObject) {
 	}
 #endif /* OMR_GC_CONCURRENT_SCAVENGER */
 }
+#endif /* OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */

@@ -29,7 +29,10 @@
 #include "BaseVirtual.hpp"
 #include "EnvironmentBase.hpp"
 #include "GCExtensionsBase.hpp"
+
+#if !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
 #include "SlotObject.hpp"
+#endif /* !OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */
 
 class GC_ObjectScanner;
 class MM_CompactScheme;

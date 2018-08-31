@@ -26,8 +26,8 @@
 #include "ObjectModel.hpp"
 #include "omrExampleVM.hpp"
 #include "omrgc.h"
-#include "SlotObject.hpp"
 #include "StandardWriteBarrier.hpp"
+#include "SlotObject.hpp"
 #include "VerboseWriterChain.hpp"
 
 //#define OMRGCTEST_PRINTFILE

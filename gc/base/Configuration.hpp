@@ -35,7 +35,6 @@
 #include "GCExtensionsBase.hpp"
 #include "InitializationParameters.hpp"
 #include "Scavenger.hpp"
-#include "SlotObject.hpp"
 
 class MM_Dispatcher;
 class MM_GCExtensionsBase;

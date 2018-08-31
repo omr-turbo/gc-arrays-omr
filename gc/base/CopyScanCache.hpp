@@ -51,11 +51,16 @@
 #define J9VM_MODRON_SCAVENGER_CACHE_TYPE_HEAP OMR_SCAVENGER_CACHE_TYPE_HEAP
 #define J9VM_MODRON_SCAVENGER_CACHE_MASK_PERSISTENT OMR_SCAVENGER_CACHE_MASK_PERSISTENT
 
+#include "omrcfg.h"
+
 #include "omrcomp.h"
 #include "modronbase.h"
 
 #include "Base.hpp"
+
+#if !defined(OMR_GC_EXPERIMENTAL_OBJECT_ITERATOR)
 #include "ObjectIteratorState.hpp"
+#endif
 
 /**
  * @todo Provide class documentation

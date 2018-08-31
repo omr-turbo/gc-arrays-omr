@@ -30,7 +30,6 @@
 #if defined(OMR_GC_MODRON_SCAVENGER)
 
 #include "omrcomp.h"
-
 #include "CollectionStatisticsStandard.hpp"
 #include "Collector.hpp"
 #include "ConcurrentPhaseStatsBase.hpp"
@@ -38,6 +37,7 @@
 #include "CopyScanCacheStandard.hpp"
 #include "CycleState.hpp"
 #include "GCExtensionsBase.hpp"
+#include "SlotObject.hpp"
 #if defined(OMR_GC_CONCURRENT_SCAVENGER)
 #include "MasterGCThread.hpp"
 #endif /* OMR_GC_CONCURRENT_SCAVENGER */

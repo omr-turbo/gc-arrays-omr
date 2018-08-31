@@ -19,8 +19,17 @@
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
-#include <string.h>
+#include <omrcfg.h>
 
+#include "ObjectAllocationModel.hpp"
+#include "omrgc.h"
+
+#if defined(OMR_GC_EXPERIMENTAL_CONTEXT)
+#include <OMR/Runtime.hpp>
+#include <OMR/GC/System.hpp>
+#include <OMR/GC/StackRoot.hpp>
+#else /* OMR_GC_EXPERIMENTAL_CONTEXT */
+#include <string.h>
 #include "omrport.h"
 #include "ModronAssertions.h"
 /* OMR Imports */
@@ -30,7 +39,6 @@
 #include "EnvironmentBase.hpp"
 #include "GCExtensionsBase.hpp"
 #include "GlobalCollector.hpp"
-#include "ObjectAllocationModel.hpp"
 #include "ObjectAllocationInterface.hpp"
 #include "ObjectModel.hpp"
 #include "omr.h"
@@ -39,12 +47,29 @@
 #include "omrvm.h"
 #include "StartupManagerImpl.hpp"
 #include "omrExampleVM.hpp"
+#endif /* OMR_GC_EXPERIMENTAL_CONTEXT */
 
 extern "C" {
 
 int
 omr_main_entry(int argc, char ** argv, char **envp)
 {
+#if defined(OMR_GC_EXPERIMENTAL_CONTEXT)
+
+	OMR::Runtime runtime;
+	OMR::GC::System system(runtime);
+	OMR::GC::RunContext cx(system);
+
+	const std::uintptr_t allocSize = 24;
+	MM_ObjectAllocationModel allocationModel(cx.env(), allocSize, 0);
+	OMR::GC::StackRoot<void> root(cx, OMR_GC_AllocateObject(cx.vm(), &allocationModel));
+
+	OMR_GC_SystemCollect(cx.vm(), 0);
+
+	return 0;
+
+#else /* defined(OMR_GC_EXPERIMENTAL_CONTEXT) */
+
 	/* Start up */
 	OMR_VM_Example exampleVM;
 	OMR_VMThread *omrVMThread = NULL;
@@ -146,6 +171,9 @@ omr_main_entry(int argc, char ** argv, char **envp)
 	/* Can not assert the value of rc since the portlibrary and trace engine have been shutdown */
 
 	return rc;
+
+#endif /* else defined(OMR_GC_EXPERIMENTAL_CONTEXT) */
+
 }
 
 }

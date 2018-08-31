@@ -23,6 +23,8 @@
 #if !defined(OBJECTMODELBASE_HPP_)
 #define OBJECTMODELBASE_HPP_
 
+#include "omrcfg.h"
+
 #if defined(OMR_EXAMPLE)
 #define OBJECT_MODEL_MODRON_ASSERTIONS
 #endif /* defined(OMR_EXAMPLE) */
@@ -38,6 +40,10 @@
 #include "ForwardedHeader.hpp"
 #include "HeapLinkedFreeHeader.hpp"
 #include "ObjectModelDelegate.hpp"
+
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+#include <OMRClient/GC/ObjectScanner.hpp>
+#endif /* OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */
 
 class MM_AllocateInitialization;
 class MM_EnvironmentBase;
@@ -133,6 +139,14 @@ public:
 	 * Tear down the receiver
 	 */
 	virtual void tearDown(MM_GCExtensionsBase *extensions) = 0;
+
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+	MMINLINE OMRClient::GC::ObjectScanner
+	makeObjectScanner()
+	{
+		return _delegate.makeObjectScanner();
+	}
+#endif /* OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */
 
 	/**
 	 * If the received object holds an indirect reference (ie a reference to an object
@@ -410,7 +424,7 @@ public:
 	MMINLINE uintptr_t
 	getSizeInBytesMultiSlotDeadObject(omrobjectptr_t objectPtr)
 	{
-		return MM_HeapLinkedFreeHeader::getHeapLinkedFreeHeader(objectPtr)->getSize();
+		return MM_HeapLinkedFreeHeader::getHeapLinkedFreeHeader((void*)objectPtr)->getSize();
 	}
 
 	/**

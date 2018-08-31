@@ -38,10 +38,8 @@
 #include "HeapLinkedFreeHeader.hpp"
 #include "MarkingScheme.hpp"
 #include "MemorySubSpaceSemiSpace.hpp"
-#include "MixedObjectScanner.hpp"
 #include "mminitcore.h"
 #include "objectdescription.h"
-#include "ObjectIterator.hpp"
 #include "ObjectModel.hpp"
 #include "omr.h"
 #include "omrExampleVM.hpp"
@@ -49,7 +47,12 @@
 #include "OMRVMInterface.hpp"
 #include "ParallelGlobalGC.hpp"
 #include "Scavenger.hpp"
+
+#if !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+#include "MixedObjectScanner.hpp"
 #include "SlotObject.hpp"
+#include "ObjectIterator.hpp"
+#endif /* !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER) */
 
 /**
  * Initialization

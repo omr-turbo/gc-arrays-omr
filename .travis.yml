@@ -65,6 +65,9 @@ matrix:
     # 32-bit linux arm
     - os: linux
       env: SPEC=linux_arm PLATFORM=arm-linux-gcc RUN_TEST=no
+    # Experimental GC APIs
+    - os: linux
+      env: CMAKE_CACHE=cmake/caches/GcExperimentalApi.cmake BUILD_WITH_CMAKE=yes CMAKE_GENERATOR="Unix Makefiles"
     # Linter
     - os: linux
       addons:

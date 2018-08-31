@@ -23,8 +23,9 @@
 #if !defined(HEAP_WALKER_HPP_)
 #define HEAP_WALKER_HPP_
 
-#include "omr.h"
 #include "omrcfg.h"
+
+#include "omr.h"
 #include "objectdescription.h"
 
 #include "BaseVirtual.hpp"
@@ -62,4 +63,4 @@ public:
 	};
 };
 
-#endif /* HEAP_WALKER_HPP_ */
+#endif // HEAP_WALKER_HPP_

@@ -223,7 +223,7 @@ if(OMR_GC_MODRON_STANDARD)
 				base/standard/CompactFixHeapForWalkTask.cpp
 				base/standard/CompactScheme.cpp
 				base/standard/ParallelCompactTask.cpp
-				
+
 				stats/CompactStats.cpp
 		)
 	endif()
@@ -346,13 +346,18 @@ target_include_directories(omrgc
 )
 
 target_link_libraries(omrgc
-	PRIVATE
-		${OMR_GC_GLUE_TARGET}
-		omrutil
+	PUBLIC
 		omrcore
 		${OMR_THREAD_LIB}
 		${OMR_PORT_LIB}
+	PRIVATE
+		${OMR_GC_GLUE_TARGET}
+		omrutil
 		${OMR_HOOK_LIB}
 )
 
 set_target_properties(omrgc omrgc_hookgen omrgc_tracegen PROPERTIES FOLDER gc)
+
+if (OMR_GC_EXPERIMENTAL_CONTEXT)
+	add_subdirectory(api)
+endif(OMR_GC_EXPERIMENTAL_CONTEXT)

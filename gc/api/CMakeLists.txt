@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2017, 2018 IBM Corp. and others
+# Copyright (c) 2018, 2018 IBM Corp. and others
 #
 # This program and the accompanying materials are made available under
 # the terms of the Eclipse Public License 2.0 which accompanies this
@@ -18,45 +18,51 @@
 #
 # SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
 ###############################################################################
-
 include(OmrAssert)
 
-omr_assert(TEST OMR_EXAMPLE)
+omr_assert(TEST OMR_GC_EXPERIMENTAL_CONTEXT)
 
-add_library(omr_example_base INTERFACE)
+###
+### OMR GC
+###
 
-target_include_directories(omr_example_base
-	INTERFACE
-		./include
+target_sources(omrgc
+	PRIVATE
+		${CMAKE_CURRENT_SOURCE_DIR}/src/OMR_GC_System.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/glue/MarkingDelegate.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/glue/EnvironmentDelegate.cpp
 )
 
-if (NOT OMR_GC_EXPERIMENTAL_CONTEXT)
-	target_include_directories(omr_example_base
-		INTERFACE
-			./include_extended
-	)
-endif(NOT OMR_GC_EXPERIMENTAL_CONTEXT)
+target_include_directories(omrgc
+	PUBLIC
+		glue/
+		include/
+)
 
-# The GC example shows how to use OMR's GC component
-if(OMR_GC)
-	add_executable(gcexample
-		gcmain.cpp
-	)
+# https://cmake.org/cmake/help/v3.6/prop_gbl/CMAKE_CXX_KNOWN_FEATURES.html#prop_gbl:CMAKE_CXX_KNOWN_FEATURES
+target_compile_features(omrgc
+	PUBLIC
+		cxx_constexpr
+		# cxx_auto_type
+		cxx_deleted_functions
+		cxx_delegating_constructors
+		cxx_noexcept
+		cxx_nullptr
+		cxx_override
+		cxx_right_angle_brackets
+		cxx_variadic_templates
+		cxx_template_template_parameters
+)
 
-	target_link_libraries(gcexample
-		omr_main_function
-		pugixml
-		omrcore
-		omrvmstartup
-		${OMR_GC_LIB}
-		${OMR_PORT_LIB}
-	)
+###
+### OMR Util
+###
 
-	# TODO: The example is currently broken.
-	# Hashtable iteration appears to be broken, which in turn breaks root
-	# marking, and causes the example to spin forever.
-	# add_test(gcexample gcexample)
-endif(OMR_GC)
+target_sources(omrutil_obj
+	PRIVATE
+		${CMAKE_CURRENT_SOURCE_DIR}/glue/UtilGlue.c
+)
 
-add_subdirectory(glue)
-
+if (OMR_FVTEST)
+	add_subdirectory(test)
+endif()

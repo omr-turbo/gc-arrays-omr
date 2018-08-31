@@ -36,7 +36,6 @@ add_dependencies(omrvmstartup
 	trc_omrti
 )
 
-
 target_link_libraries(omrvmstartup
 	PRIVATE
 		omrcore

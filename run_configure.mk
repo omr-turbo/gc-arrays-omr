@@ -31,6 +31,8 @@ help:
 	@echo "variables before using this script:"
 	@echo "SPEC      Should match the current platform (e.g. SPEC=linux_x86-64)"
 	@echo "OMRGLUE   OMRGLUE should be set to the path to the OMR glue files (e.g OMRGLUE=\$$PWD/example/glue)"
+	@echo "OMRGLUE_INCLUDES"
+	@echo "          A whitespace seperated list of glue-provided directories added to the include path"
 	@echo "CONFIG_INCL_DIR"
 	@echo "          The path to makefiles which are included into this makefile."
 	@echo "          Defaults to: \$$(OMRGLUE)/configure_includes"
@@ -128,7 +130,7 @@ clean: clean-environment-variables
 ###
 
 define CONFIGURE_RECIPE
-sh configure --disable-auto-build-flag 'OMRGLUE=$(OMRGLUE)' 'SPEC=$(SPEC)' $(CONFIGURE_ARGS)
+sh configure --disable-auto-build-flag 'OMRGLUE=$(OMRGLUE)' 'OMRGLUE_INCLUDES=$(OMRGLUE_INCLUDES)' 'SPEC=$(SPEC)' $(CONFIGURE_ARGS)
 # Force the timestamps of unchanged files to be updated
 touch $(CONFIGURE_OUTPUT_FILES)
 endef

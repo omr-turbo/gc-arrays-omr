@@ -22,9 +22,14 @@
 #ifndef OBJECTMODELDELEGATE_HPP_
 #define OBJECTMODELDELEGATE_HPP_
 
+#include "omrcfg.h"
 #include "objectdescription.h"
 
 #include "ForwardedHeader.hpp"
+
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+#include <OMRClient/GC/ObjectScanner.hpp>
+#endif /* OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */
 
 class MM_AllocateInitialization;
 class MM_EnvironmentBase;
@@ -69,6 +74,15 @@ public:
 private:
 protected:
 public:
+
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+	MMINLINE OMRClient::GC::ObjectScanner
+	makeObjectScanner()
+	{
+		return OMRClient::GC::ObjectScanner();
+	}
+#endif /* OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */
+
 	/**
 	 * If the received object holds an indirect reference (ie a reference to an object
 	 * that is not reachable from the object reference graph) a pointer to the referenced

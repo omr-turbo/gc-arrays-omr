@@ -23,17 +23,20 @@
 #if !defined(OBJECTITERATOR_HPP_)
 #define OBJECTITERATOR_HPP_
 
-#include "omr.h"
 #include "omrcfg.h"
+
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+#error "ObjectIterator is not compatible with the extended glue"
+#endif
+
+#include "omr.h"
 #include "ModronAssertions.h"
 #include "modronbase.h"
-
 #include "Base.hpp"
 #include "GCExtensionsBase.hpp"
 #include "objectdescription.h"
 #include "ObjectModel.hpp"
 #include "SlotObject.hpp"
-
 
 class GC_ObjectIterator
 {

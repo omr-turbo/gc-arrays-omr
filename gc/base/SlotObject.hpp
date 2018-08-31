@@ -20,7 +20,6 @@
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
-
 #if !defined(SLOTOBJECT_HPP_)
 #define SLOTOBJECT_HPP_
 
@@ -31,6 +30,10 @@
 #include "objectdescription.h"
 
 #include "AtomicOperations.hpp"
+
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+#error "GC_SlotObject is incompatible with the extended API, which uses client-defined SlotHandle."
+#endif
 
 class GC_SlotObject
 {

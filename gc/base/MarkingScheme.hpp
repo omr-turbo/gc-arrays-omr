@@ -35,8 +35,13 @@
 #include "MarkMap.hpp"
 #include "ModronAssertions.h"
 #include "ObjectModel.hpp"
-#include "ObjectScannerState.hpp"
 #include "WorkStack.hpp"
+
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+#include "OMRClient/GC/ObjectScanner.hpp"
+#else /* OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */
+#include "ObjectScannerState.hpp"
+#endif /* OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */
 
 /**
  * @todo Provide class documentation
@@ -87,6 +92,21 @@ protected:
 	virtual void tearDown(MM_EnvironmentBase *env);
 
 public:
+
+	struct MarkingVisitor {
+		MarkingVisitor(MM_EnvironmentBase* env, MM_MarkingScheme* markingScheme) :
+			env(env), markingScheme(markingScheme) {}
+		
+		MM_EnvironmentBase* env;
+		MM_MarkingScheme* markingScheme;
+
+		template <class SlotHandleT>
+		bool edge(void* object, SlotHandleT slot) {
+			markingScheme->inlineMarkObjectNoCheck(env, slot.readReference());
+			return true;
+		}
+	};
+
 	static MM_MarkingScheme *newInstance(MM_EnvironmentBase *env);
 	virtual void kill(MM_EnvironmentBase *env);
 	
@@ -171,7 +191,7 @@ public:
 	{
 		bool objectMarked = false;
 
-		if (NULL != objectPtr) {
+		if (NULL != (void*)objectPtr) {
 			objectMarked = inlineMarkObjectNoCheck(env, objectPtr, leafType);
 		}
 
@@ -235,6 +255,12 @@ public:
 	MMINLINE uintptr_t
 	scanObject(MM_EnvironmentBase *env, omrobjectptr_t objectPtr, MM_MarkingSchemeScanReason reason, uintptr_t sizeToDo = UDATA_MAX)
 	{
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+		OMRClient::GC::ObjectScanner scanner = env->getExtensions()->objectModel.makeObjectScanner();
+		OMR::GC::ScanResult result = scanner.start(MarkingVisitor(env, this), objectPtr, sizeToDo);
+		assert(result.complete);
+		return result.bytesScanned;
+#else // OMR_GC_EXPERIMENTAL_OBJECT_SCANNER
 		GC_ObjectScannerState objectScannerState;
 		GC_ObjectScanner *objectScanner = _delegate.getObjectScanner(env, objectPtr, &objectScannerState, reason, &sizeToDo);
 		if (NULL != objectScanner) {
@@ -261,6 +287,7 @@ public:
 		}
 
 		return sizeToDo;
+#endif /* OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */
 	}
 
 	MM_MarkingDelegate *getMarkingDelegate() { return &_delegate; }
@@ -290,6 +317,8 @@ public:
 	 * in the final phase of Concurrent GC when we scan Nursery. 
 	 */
 
+#if !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+	// TODO: Fixup is not yet implemented in terms of SlotHandles.
 	void fixupForwardedSlot(GC_SlotObject *slotObject) {
 #if defined(OMR_GC_CONCURRENT_SCAVENGER)
 		if (_extensions->isConcurrentScavengerEnabled() && _extensions->isScavengerBackOutFlagRaised()) {
@@ -299,6 +328,7 @@ public:
 	}
 	
 	void fixupForwardedSlotOutline(GC_SlotObject *slotObject);
+#endif /* OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */
 
 	/**
 	 * Create a MarkingScheme object.
@@ -318,4 +348,3 @@ public:
 };
 
 #endif /* MARKINGSCHEME_HPP_ */
-

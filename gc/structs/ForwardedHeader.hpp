@@ -414,7 +414,7 @@ public:
 	getReverseForwardedPointer()
 	{
 		ForwardedHeaderAssert(isReverseForwardedPointer());
-		MM_HeapLinkedFreeHeader* freeHeader = MM_HeapLinkedFreeHeader::getHeapLinkedFreeHeader(_objectPtr);
+		MM_HeapLinkedFreeHeader* freeHeader = MM_HeapLinkedFreeHeader::getHeapLinkedFreeHeader((void*)_objectPtr);
 		return (omrobjectptr_t) freeHeader->getNext();
 	}
 
