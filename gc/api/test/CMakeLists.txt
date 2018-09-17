@@ -21,3 +21,5 @@ function(omr_add_gc_test testname)
 		PROPERTY CXX_STANDARD 11
 	)
 endfunction(omr_add_gc_test)
+
+omr_add_gc_test(RefTest)
