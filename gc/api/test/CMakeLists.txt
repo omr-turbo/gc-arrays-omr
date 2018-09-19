@@ -23,3 +23,4 @@ function(omr_add_gc_test testname)
 endfunction(omr_add_gc_test)
 
 omr_add_gc_test(RefTest)
+omr_add_gc_test(TestIntrusiveList)
