@@ -76,7 +76,7 @@ class Object
 {
 public:
 	static ObjectSize allocSize(ObjectSize nslots) {
-		return ObjectSize(sizeof(ObjectHeader) + sizeof(fomrobject_t) * nslots);
+		return ObjectSize(sizeof(ObjectHeader) + (sizeof(fomrobject_t) * nslots));
 	}
 
 	explicit Object(ObjectSize sizeInBytes, ObjectFlags flags = 0) : header(sizeInBytes, flags) {}

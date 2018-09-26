@@ -39,10 +39,13 @@ set(OMR_GC_TEST OFF CACHE BOOL "")
 
 set(OMR_THR_FORK_SUPPORT OFF CACHE BOOL "")
 
+# Enable supported GC policies
+
+set(OMR_GC_MODRON_SCAVENGER ON CACHE BOOL "")
+
 # Disable (temporarily) unsupported GC policies
 
 set(OMR_GC_SEGREGATED_HEAP OFF CACHE BOOL "")
-set(OMR_GC_MODRON_SCAVENGER OFF CACHE BOOL "")
 set(OMR_GC_MODRON_CONCURRENT_MARK OFF CACHE BOOL "")
 
 # Default-on options

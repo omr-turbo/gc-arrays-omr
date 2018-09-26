@@ -93,7 +93,7 @@ public:
 
 		// Note: only scanning the stack roots for *one* context.
 		for (StackRootListNode &node : cx.stackRoots()) {
-			visitor.edge(NULL, RefSlotHandle((omrobjectptr_t*)&node.ref));
+			visitor.edge(NULL, RefSlotHandle((fomrobject_t *)&node.ref));
 		}
 
 		for (auto &fn : cx.scavengingFns()) {
@@ -118,3 +118,4 @@ using MM_ScavengerRootScanner = OMR::GC::ScavengerRootScanner;
 
 #endif /* defined(OMR_GC_MODRON_SCAVENGER) */
 #endif /* OMR_GC_SCAVENGERROOTSCANNER_HPP_ */
+

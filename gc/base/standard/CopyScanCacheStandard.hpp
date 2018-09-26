@@ -58,7 +58,8 @@ private:
 protected:
 public:
 #if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
-	ObjectScannerStorage _objectScannerStorage;
+	OMRClient::GC::ObjectScanner _scanner;
+	// ObjectScannerStorage _objectScannerStorage;
 #else
 	GC_ObjectScannerState _objectScannerState; /**< Space reserved for instantiation of object scanner for current object */
 #endif
@@ -72,7 +73,7 @@ private:
 protected:
 public:
 #if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
-	MMINLINE OMRClient::GC::ObjectScanner *getObjectScanner() { return reinterpret_cast<OMRClient::GC::ObjectScanner*>(&_objectScannerStorage); }
+	// MMINLINE OMRClient::GC::ObjectScanner *getObjectScanner() { return reinterpret_cast<OMRClient::GC::ObjectScanner*>(&_objectScannerStorage); }
 #else /* OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */
 	MMINLINE GC_ObjectScanner *
 	getObjectScanner()
@@ -92,16 +93,25 @@ public:
 		return (OMR_SCAVENGER_CACHE_TYPE_SPLIT_ARRAY == (flags & OMR_SCAVENGER_CACHE_TYPE_SPLIT_ARRAY));
 	}
 
+
 	/**
 	 * Create a CopyScanCacheStandard object.
-	 */	
+	 */
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+	MM_CopyScanCacheStandard(uintptr_t givenFlags, const OMRClient::GC::ObjectScanner &scanner)
+#else
 	MM_CopyScanCacheStandard(uintptr_t givenFlags)
+#endif
 		: MM_CopyScanCache(givenFlags)
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+		, _scanner(scanner)
+#endif
 		, _shouldBeRemembered(false)
 		, _arraySplitIndex(0)
 		, _arraySplitAmountToScan(0)
 		, _arraySplitRememberedSlot(NULL)
-	{}
+	{
+	}
 };
 
 #endif /* COPYSCANCACHESTANDARD_HPP_ */

@@ -18,6 +18,8 @@
 // #include "LanguageThreadLocalHeap.hpp"
 #include <AllocateDescription.hpp>
 #include <MemorySubSpace.hpp>
+#include <GCExtensionsBase.hpp>
+
 #include <OMR/GC/AllocationResult.hpp>
 #include <OMR/GC/System.hpp>
 #include <OMR/GC/StackRoot.hpp>

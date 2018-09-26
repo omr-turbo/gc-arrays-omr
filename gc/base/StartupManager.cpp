@@ -218,14 +218,19 @@ MM_StartupManager::loadGcOptions(MM_GCExtensionsBase *extensions)
 
 	/* Set defaults to support Standard GC in OMR */
 	extensions->initialMemorySize = defaultMinHeapSize;
-	extensions->minNewSpaceSize = 0;
-	extensions->newSpaceSize = 0;
-	extensions->maxNewSpaceSize = 0;
-	extensions->minOldSpaceSize = defaultMinHeapSize;
-	extensions->oldSpaceSize = defaultMinHeapSize;
-	extensions->maxOldSpaceSize = defaultMaxHeapSize;
+	extensions->minNewSpaceSize = defaultMinHeapSize / 4;
+	extensions->newSpaceSize = extensions->minNewSpaceSize;
+	extensions->maxNewSpaceSize = defaultMaxHeapSize / 4;
+	extensions->minOldSpaceSize = defaultMinHeapSize - extensions->minNewSpaceSize;
+	extensions->oldSpaceSize = extensions->minOldSpaceSize;
+	extensions->maxOldSpaceSize = defaultMaxHeapSize - extensions->maxNewSpaceSize;
 	extensions->memoryMax = defaultMaxHeapSize;
 	extensions->maxSizeDefaultMemorySpace = defaultMaxHeapSize;
+
+#if defined(OMR_GC_MODRON_SCAVENGER)
+	extensions->fvtest_forceScavengerBackout = false;
+	extensions->fvtest_forcePoisonEvacuate = false;
+#endif /* OMR_GC_MODRON_SCAVENGER */
 
 	/* Now override defaults with specified settings, if any */
 	bool result = parseGcOptions(extensions);
@@ -276,7 +281,7 @@ MM_StartupManager::handleOption(MM_GCExtensionsBase *extensions, char *option)
 	else if (0 == strncmp(option, OMR_XGCBUFFERED_LOGGING, OMR_XGCBUFFERED_LOGGING_LENGTH)) {
 		extensions->bufferedLogging = true;
 	}
-#if defined(OMR_GC_MORDON_SCAVENGER)
+#if defined(OMR_GC_MODRON_SCAVENGER)
 	else if (0 == strncmp(option, OMR_XGCPOLICY, OMR_XGCPOLICY_LENGTH)) {
 		char *gcpolicy = option + OMR_XGCPOLICY_LENGTH;
 		if (0 == strncmp(gcpolicy, OMR_GCPOLICY_GENCON, OMR_GCPOLICY_GENCON_LENGTH)) {
@@ -286,7 +291,7 @@ MM_StartupManager::handleOption(MM_GCExtensionsBase *extensions, char *option)
 			result = false;
 		}
 	}
-#endif /* defined(OMR_GC_MORDON_SCAVENGER) */
+#endif /* defined(OMR_GC_MODRON_SCAVENGER) */
 	else if (0 == strncmp(option, OMR_XGCTHREADS, OMR_XGCTHREADS_LENGTH)) {
 		uintptr_t forcedThreadCount = 0;
 		if (0 >= getUDATAValue(option + OMR_XGCTHREADS_LENGTH, &forcedThreadCount)) {

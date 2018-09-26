@@ -32,9 +32,10 @@
 
 #if !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
 #include "SlotObject.hpp"
+class GC_ObjectScanner;
 #endif /* !OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */
 
-class GC_ObjectScanner;
+
 class MM_CompactScheme;
 class MM_EnvironmentStandard;
 class MM_ForwardedHeader;
@@ -121,6 +122,7 @@ public:
 	 */
 	virtual bool scavenger_internalGarbageCollect_shouldPercolateGarbageCollect(MM_EnvironmentBase * env, PercolateReason * percolateReason, uint32_t * gcCode) = 0;
 
+#if !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
 	/**
 	 * An object scanner is required to locate and scan all object references associated with each root object
 	 * and every object that is evacuated from allocate space during a scavenge cycle. this method must instantiate
@@ -136,6 +138,7 @@ public:
 	 * @see GC_ObjectScanner
 	 */
 	virtual GC_ObjectScanner *scavenger_getObjectScanner(MM_EnvironmentStandard *env, omrobjectptr_t objectPtr, void *allocSpace, uintptr_t flags) = 0;
+#endif // !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
 
 	/**
 	 * Scavenger calls this method when required to force GC threads to flush any locally-held references into

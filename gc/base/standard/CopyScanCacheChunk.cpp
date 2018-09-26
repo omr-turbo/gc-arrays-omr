@@ -64,12 +64,20 @@ MM_CopyScanCacheChunk::initialize(MM_EnvironmentBase *env, uintptr_t cacheEntryC
 	MM_CopyScanCacheStandard *previousCache = NULL;
 	*sublistTail = _baseCache + cacheEntryCount - 1;
 
+
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+	const OMRClient::GC::ObjectScanner scanner = env->getExtensions()->objectModel.makeObjectScanner();
+#endif
+
 	for (MM_CopyScanCacheStandard *currentCache = *sublistTail; currentCache >= _baseCache; currentCache--) {
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+		new(currentCache) MM_CopyScanCacheStandard(flags, scanner);
+#else
 		new(currentCache) MM_CopyScanCacheStandard(flags);
+#endif
 		currentCache->next = previousCache;
 		previousCache = currentCache;
 	}
-	
 	return true;
 }
 
@@ -79,5 +87,3 @@ MM_CopyScanCacheChunk::tearDown(MM_EnvironmentBase *env)
 	_baseCache = NULL;
 	_nextChunk = NULL;
 }
-
-

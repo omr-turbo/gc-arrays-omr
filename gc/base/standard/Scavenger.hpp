@@ -37,10 +37,15 @@
 #include "CopyScanCacheStandard.hpp"
 #include "CycleState.hpp"
 #include "GCExtensionsBase.hpp"
+
+#if !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
 #include "SlotObject.hpp"
+#endif /* !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER) */
+
 #if defined(OMR_GC_CONCURRENT_SCAVENGER)
 #include "MasterGCThread.hpp"
 #endif /* OMR_GC_CONCURRENT_SCAVENGER */
+
 struct J9HookInterface;
 class GC_ObjectScanner;
 class MM_AllocateDescription;
@@ -56,6 +61,73 @@ class MM_RSOverflow;
 class MM_SublistPool;
 
 struct OMR_VM;
+
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+
+class MM_Scavenger;
+class MM_CopyScanCache;
+
+struct CopyForwardResult {
+	omrobjectptr_t destination = (omrobjectptr_t)0x01;
+	MM_CopyScanCacheStandard* destinationCache = (MM_CopyScanCacheStandard*)0x02;
+	bool didCopyForward = false;
+	bool isDestinationInNewSpace = false;
+};
+
+struct ScavengingScanResult {
+	void clear() noexcept {
+		slotsScanned = 0;
+		slotsCopied = 0;
+		nextScanCache = nullptr;
+		hasReferentsInNewSpace = false;
+		wantToAlias = false;
+	}
+
+	std::size_t slotsScanned = 0;
+	std::size_t slotsCopied = 0;
+	MM_CopyScanCacheStandard* nextScanCache = nullptr;
+	bool hasReferentsInNewSpace = false;
+	bool wantToAlias = false;
+};
+
+class ScavengingRootVisitor {
+public:
+	ScavengingRootVisitor(MM_EnvironmentStandard* env, MM_Scavenger *scavenger) :
+		_env(env),
+		_scavenger(scavenger),
+		_hasReferentsInNewSpace(0) {}
+
+	ScavengingRootVisitor(const ScavengingRootVisitor&) = delete;
+
+	template <class SlotHandleT>
+	bool edge(void* object, SlotHandleT slot) noexcept;
+
+	MM_EnvironmentStandard *_env;
+	MM_Scavenger *_scavenger;
+	int _hasReferentsInNewSpace;
+};
+
+class ScavengingObjectVisitor {
+public:
+	ScavengingObjectVisitor(MM_EnvironmentStandard* env, MM_Scavenger *scavenger, MM_CopyScanCacheStandard *scanCache) :
+		_env(env),
+		_scavenger(scavenger),
+		_scanCache(scanCache) {}
+
+	ScavengingObjectVisitor(const ScavengingObjectVisitor&) = delete;
+
+	template <class SlotHandleT>
+	bool edge(void* object, SlotHandleT slot) noexcept;
+	
+	MM_EnvironmentStandard *_env;
+	MM_Scavenger *_scavenger;
+	MM_CopyScanCacheStandard *_scanCache;
+	ScavengingScanResult _result;
+
+};
+
+
+#endif /* defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER) */
 
 /**
  * @todo Provide class documentation
@@ -181,6 +253,8 @@ public:
 	 */
 	void globalCollectionComplete(MM_EnvironmentBase *env);
 
+#if !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+
 	/**
 	 * Test backout state and inhibit array splitting once backout starts.
 	 * @param env current thread environment
@@ -190,6 +264,7 @@ public:
 	 * @return the object scanner
 	 */
 	MMINLINE GC_ObjectScanner *getObjectScanner(MM_EnvironmentStandard *env, omrobjectptr_t objectptr, void *objectScannerState, uintptr_t flags);
+#endif /* !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER) */
 
 	uintptr_t calculateCopyScanCacheSizeForWaitingThreads(uintptr_t maxCacheSize, uintptr_t threadCount, uintptr_t waitingThreads);
 	uintptr_t calculateCopyScanCacheSizeForQueueLength(uintptr_t maxCacheSize, uintptr_t threadCount, uintptr_t scanCacheCount);
@@ -207,18 +282,37 @@ public:
 
 	MM_CopyScanCacheStandard *getNextScanCache(MM_EnvironmentStandard *env);
 
-	/**
-	 * Implementation of CopyAndForward for slotObject input format
-	 * @param slotObject input field in slotObject format
-	 */
-	MMINLINE bool copyAndForward(MM_EnvironmentStandard *env, GC_SlotObject *slotObject);
+#if !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
 
 	MMINLINE bool copyAndForward(MM_EnvironmentStandard *env, volatile omrobjectptr_t *objectPtrIndirect);
+
+	MMINLINE bool copyAndForward(MM_EnvironmentStandard *env, GC_SlotObject *slotObject);
+
+	bool splitIndexableObjectScanner(MM_EnvironmentStandard *env, GC_ObjectScanner *objectScanner, uintptr_t startIndex, omrobjectptr_t *rememberedSetSlot);
+
+#endif /* !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER) */
 
 	MMINLINE omrobjectptr_t copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHeader);
 
 	MMINLINE void updateCopyScanCounts(MM_EnvironmentBase* env, uint64_t slotsScanned, uint64_t slotsCopied);
-	bool splitIndexableObjectScanner(MM_EnvironmentStandard *env, GC_ObjectScanner *objectScanner, uintptr_t startIndex, omrobjectptr_t *rememberedSetSlot);
+
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+
+	/**
+	 * Scavenge the contents of an object. This is a non-incremental, non-aliasing scan.
+	 */
+	bool scavengeObjectSlots(MM_EnvironmentStandard* env, omrobjectptr_t object);
+
+	void startScan(MM_CopyScanCacheStandard* cache);
+
+	void interruptScan(MM_EnvironmentStandard* env, MM_CopyScanCacheStandard* cache, omrobjectptr_t lastScanned, bool hasPartiallyScannedObject);
+
+	void endScan(MM_EnvironmentStandard* env, MM_CopyScanCacheStandard* cache);
+
+#endif /* OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */
+
+#if !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+	// Not supported by the experimental object scanner--only needed by depth first, which is disabled.
 
 	/**
 	 * Scavenges the contents of an object.
@@ -230,6 +324,7 @@ public:
 	 */
 	MMINLINE bool scavengeObjectSlots(MM_EnvironmentStandard *env, MM_CopyScanCacheStandard *scanCache, omrobjectptr_t objectPtr, uintptr_t flags, omrobjectptr_t *rememberedSetSlot);
 	MMINLINE MM_CopyScanCacheStandard *incrementalScavengeObjectSlots(MM_EnvironmentStandard *env, omrobjectptr_t objectPtr, MM_CopyScanCacheStandard* scanCache);
+#endif // !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER
 
 	MMINLINE bool scavengeRememberedObject(MM_EnvironmentStandard *env, omrobjectptr_t objectPtr);
 	void scavengeRememberedSetList(MM_EnvironmentStandard *env);
@@ -246,11 +341,38 @@ public:
 	 */
 	bool shouldRememberObject(MM_EnvironmentStandard *env, omrobjectptr_t objectPtr);
 
+#if !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+
 	/**
 	 * BackOutFixSlot implementation
 	 * @param slotObject input field in slotObject format
 	 */
 	bool backOutFixSlot(GC_SlotObject *slotObject);
+
+#else /* !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)*/
+
+	template<typename SlotHandleT>
+	bool backOutFixSlot(SlotHandleT slot) {
+		omrobjectptr_t objectPtr = slot.readReference();
+
+		if(NULL != objectPtr) {
+			MM_ForwardedHeader forwardHeader(objectPtr);
+			Assert_MM_false(forwardHeader.isForwardedPointer());
+			if (forwardHeader.isReverseForwardedPointer()) {
+				slot.writeReference(forwardHeader.getReverseForwardedPointer());
+#if defined(OMR_SCAVENGER_TRACE_BACKOUT)
+				OMRPORT_ACCESS_FROM_OMRVM(_omrVM);
+				omrtty_printf("{SCAV: Back out object slot %p[%p->%p]}\n", objectPtr, slotObject->readAddressFromSlot(), slotObject->readReferenceFromSlot());
+				Assert_MM_true(isObjectInEvacuateMemory(slotObject->readReferenceFromSlot()));
+#endif /* OMR_SCAVENGER_TRACE_BACKOUT */
+				return true;
+			}
+		}
+		return false;
+	}
+
+#endif /* !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER) */
+
 
 	void backoutFixupAndReverseForwardPointersInSurvivor(MM_EnvironmentStandard *env);
 	void processRememberedSetInBackout(MM_EnvironmentStandard *env);
@@ -288,11 +410,35 @@ public:
 	MMINLINE bool failedTenureThresholdReached() { return _failedTenureThresholdReached; };
 
 	void completeScanCache(MM_EnvironmentStandard *env, MM_CopyScanCacheStandard* scanCache);
+
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+	void
+	scanCaches(MM_EnvironmentStandard* env, MM_CopyScanCacheStandard* const first);
+
+	/* Incrementally scan a cache until a better scan cache is found. Returns the next cache to scan. */
+	MM_CopyScanCacheStandard*
+	incrementallyScanSingleCache(MM_EnvironmentStandard* env, MM_CopyScanCacheStandard* scanCache);
+
+#else
 	void incrementalScanCacheBySlot(MM_EnvironmentStandard *env, MM_CopyScanCacheStandard* scanCache);
+#endif
+
+#if !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
 
 	MMINLINE MM_CopyScanCacheStandard *aliasToCopyCache(MM_EnvironmentStandard *env, GC_SlotObject *scannedSlot, MM_CopyScanCacheStandard* scanCache, MM_CopyScanCacheStandard* copyCache);
-	MMINLINE uintptr_t scanCacheDistanceMetric(MM_CopyScanCacheStandard* cache, GC_SlotObject *scanSlot);
+
+#else /* !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER) */
+
+	MMINLINE MM_CopyScanCacheStandard *aliasToCopyCache(MM_EnvironmentStandard *env, void *referent, MM_CopyScanCacheStandard* scanCache, MM_CopyScanCacheStandard* copyCache);
+
+#endif /* !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER) */
+
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+	MMINLINE uintptr_t scanCacheDistanceMetric(MM_CopyScanCacheStandard* cache, void *scanSlot);
+#else
 	MMINLINE uintptr_t copyCacheDistanceMetric(MM_CopyScanCacheStandard* cache);
+	MMINLINE uintptr_t scanCacheDistanceMetric(MM_CopyScanCacheStandard* cache, GC_SlotObject* scanSlot);
+#endif
 
 	MMINLINE MM_CopyScanCacheStandard *getNextScanCacheFromList(MM_EnvironmentStandard *env);
 	void addCopyCachesToFreeList(MM_EnvironmentStandard *env);
@@ -687,6 +833,8 @@ public:
 	 */
 	void addToRememberedSetFragment(MM_EnvironmentStandard *env, omrobjectptr_t objectPtr);
 
+#if !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+
 	/**
 	 * Provide public (out-of-line) access to private (inline) copyAndForward(), copy() for client language
 	 * runtime. Slot holding reference will be updated with new address for referent on return.
@@ -696,6 +844,28 @@ public:
 	bool copyObjectSlot(MM_EnvironmentStandard *env, volatile omrobjectptr_t *slotPtr);
 	bool copyObjectSlot(MM_EnvironmentStandard *env, GC_SlotObject* slotObject);
 	omrobjectptr_t copyObject(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHeader);
+
+#else
+
+	MMINLINE CopyForwardResult copyAndForward(MM_EnvironmentStandard* env, omrobjectptr_t object);
+
+	/// @returns The result of copy-forwarding the referent.
+	template<typename SlotHandleT>
+	MMINLINE CopyForwardResult
+	scavengeSlot(MM_EnvironmentStandard *env, SlotHandleT slot)
+	{
+		CopyForwardResult result = copyAndForward(env, slot.readReference());
+		slot.writeReference(result.destination);
+
+#if defined(OMR_SCAVENGER_TRACK_COPY_DISTANCE)
+		if (result.destinationCache != NULL) {
+			env->_scavengerStats.countCopyDistance((uintptr_t)slot.toAddress(), (uintptr_t)slot.readReference());
+		}
+#endif /* OMR_SCAVENGER_TRACK_COPY_DISTANCE */
+		return result;
+	}
+#endif /* !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER) */
+
 
 	/**
 	 * Update the given slot to point at the new location of the object, after copying
@@ -790,5 +960,40 @@ public:
 	}
 };
 
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+
+#include <iostream>
+
+template <class SlotHandleT>
+bool ScavengingObjectVisitor::edge(void* object, SlotHandleT slot) noexcept {
+
+	// std::cout << "(scavenge-object: " << object << " slot: " << slot << ")" << std::endl;
+	_result.slotsScanned += 1;
+
+	CopyForwardResult cf = _scavenger->scavengeSlot(_env, slot);
+	_scanCache->_shouldBeRemembered |= cf.isDestinationInNewSpace;
+
+	if (cf.didCopyForward) {
+		_result.slotsCopied += 1;
+		_result.nextScanCache = _scavenger->aliasToCopyCache(_env, slot.toAddress(), _scanCache, cf.destinationCache);
+		if (_result.nextScanCache != nullptr) {
+			// we are aliasing, interrupt scan
+			return false;
+		}
+	}
+
+	return true;
+}
+
+template <class SlotHandleT>
+bool ScavengingRootVisitor::edge(void* object, SlotHandleT slot) noexcept {
+	CopyForwardResult cf = _scavenger->scavengeSlot(_env, slot);
+	_hasReferentsInNewSpace |= cf.isDestinationInNewSpace;
+	return true;
+}
+
+#endif /* defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER) */
+
 #endif /* OMR_GC_MODRON_SCAVENGER */
 #endif /* SCAVENGER_HPP_ */
+

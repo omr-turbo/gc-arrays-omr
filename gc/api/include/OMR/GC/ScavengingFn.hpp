@@ -20,39 +20,25 @@
  *  SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
-#ifndef OMR_GC_REFSLOTHANDLE_HPP_
-#define OMR_GC_REFSLOTHANDLE_HPP_
+#if !defined(OMR_GC_SCAVENGINGFN_HPP_)
+#define OMR_GC_SCAVENGINGFN_HPP_
 
-#include "objectdescription.h"
-#include "omrcfg.h"
+#include <functional>
+#include <vector>
 
-#include <cassert>
-
-#if defined(OMR_GC_COMPRESSED_POINTERS)
-#error "RefSlotHandle is incompatible with compressed pointers, use CompressedRefSlotHandle"
-#endif // OMR_GC_COMPRESSED_POINTERS
+class ScavengingRootVisitor;
+class ScavengingObjectVisitor;
 
 namespace OMR
 {
 namespace GC
 {
 
-class RefSlotHandle
-{
-public:
-	RefSlotHandle(omrobjectptr_t *slot) : _slot(slot) {}
+using ScavengingFn = std::function<void(ScavengingRootVisitor &)>;
 
-	omrobjectptr_t readReference() const noexcept { return *_slot; }
-
-	void writeReference(omrobjectptr_t value) const noexcept { *_slot = value; }
-
-	void atomicWriteReference(omrobjectptr_t value) const noexcept { assert(0); }
-
-private:
-	omrobjectptr_t *_slot;
-};
+using ScavengingFnVector = std::vector<ScavengingFn>;
 
 } // namespace GC
 } // namespace OMR
 
-#endif // OMR_GC_REFSLOTHANDLE_HPP_
+#endif // OMR_GC_SCAVENGINGFN_HPP_

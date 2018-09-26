@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corp. and others
+ * Copyright (c) 2015, 2018 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -19,32 +19,28 @@
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
-#if !defined(OBJECTALLOCATIONMODEL_HPP_)
-#define OBJECTALLOCATIONMODEL_HPP_
+#ifndef SCAVENGERBACKOUTSCANNER_HPP_
+#define SCAVENGERBACKOUTSCANNER_HPP_
 
-#include "AllocateInitialization.hpp"
-#include "ObjectModel.hpp"
+#include "omr.h"
+#include "omrcfg.h"
+#include "omrExampleVM.hpp"
+#include "omrhashtable.h"
 
-/**
- * Class definition for the Java object allocation model.
- */
-class MM_ObjectAllocationModel : public MM_AllocateInitialization
+#include "Base.hpp"
+#include "EnvironmentStandard.hpp"
+#include "Scavenger.hpp"
+
+#if defined(OMR_GC_MODRON_SCAVENGER)
+
+class MM_ScavengerBackOutScanner : public MM_Base
 {
 	/*
 	 * Member data and types
 	 */
-public:
-	/**
-	 * Define object allocation categories. These are represented in MM_AllocateInitialization
-	 * objects and are used in GC_ObjectModel::initializeAllocation() to determine how to
-	 * initialize the header of a newly allocated object.
-	 */
-	enum {
-		allocation_category_example
-	};
-
-protected:
 private:
+protected:
+public:
 
 	/*
 	 * Member functions
@@ -52,26 +48,16 @@ private:
 private:
 protected:
 public:
-	/**
-	 * Initializer.
-	 */
-	MMINLINE omrobjectptr_t
-	initializeObject(MM_EnvironmentBase *env, void *allocatedBytes)
+	MM_ScavengerBackOutScanner(MM_EnvironmentBase *env, bool singleThread, MM_Scavenger *scavenger)
+		: MM_Base()
 	{
-		omrobjectptr_t objectPtr = (omrobjectptr_t)allocatedBytes;
+	};
 
-		if (NULL != objectPtr) {
-			new(objectPtr) Object((ObjectSize)getAllocateDescription()->getBytesRequested()); 
-		}
-
-		return objectPtr;
+	void
+	scanAllSlots(MM_EnvironmentBase *env)
+	{
 	}
-
-	/**
-	 * Constructor.
-	 */
-	MM_ObjectAllocationModel(MM_EnvironmentBase *env,  uintptr_t requiredSizeInBytes, uintptr_t allocateObjectFlags = 0)
-		: MM_AllocateInitialization(env, allocation_category_example, requiredSizeInBytes, allocateObjectFlags)
-	{}
 };
-#endif /* OBJECTALLOCATIONMODEL_HPP_ */
+
+#endif /* defined(OMR_GC_MODRON_SCAVENGER) */
+#endif /* SCAVENGERBACKOUTSCANNER_HPP_ */

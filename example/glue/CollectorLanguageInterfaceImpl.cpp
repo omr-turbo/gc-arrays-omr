@@ -139,6 +139,7 @@ MM_CollectorLanguageInterfaceImpl::scavenger_internalGarbageCollect_shouldPercol
 	return false;
 }
 
+#if !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
 GC_ObjectScanner *
 MM_CollectorLanguageInterfaceImpl::scavenger_getObjectScanner(MM_EnvironmentStandard *env, omrobjectptr_t objectPtr, void *allocSpace, uintptr_t flags)
 {
@@ -149,6 +150,7 @@ MM_CollectorLanguageInterfaceImpl::scavenger_getObjectScanner(MM_EnvironmentStan
 	objectScanner = GC_MixedObjectScanner::newInstance(env, objectPtr, allocSpace, flags);
 	return objectScanner;
 }
+#endif // !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
 
 void
 MM_CollectorLanguageInterfaceImpl::scavenger_flushReferenceObjects(MM_EnvironmentStandard *env)

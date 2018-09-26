@@ -25,10 +25,11 @@
 #include "omrgc.h"
 
 #if defined(OMR_GC_EXPERIMENTAL_CONTEXT)
-#include <OMR/Runtime.hpp>
-#include <OMR/GC/System.hpp>
-#include <OMR/GC/StackRoot.hpp>
+#include <OMR/GC/AccessBarrier.hpp>
 #include <OMR/GC/Allocator.hpp>
+#include <OMR/GC/StackRoot.hpp>
+#include <OMR/GC/System.hpp>
+#include <OMR/Runtime.hpp>
 #else /* OMR_GC_EXPERIMENTAL_CONTEXT */
 #include <string.h>
 #include "omrport.h"
@@ -52,6 +53,11 @@
 #endif /* OMR_GC_EXPERIMENTAL_CONTEXT */
 
 #if defined(OMR_GC_EXPERIMENTAL_CONTEXT)
+void
+store(OMR::GC::RunContext &cx, Object *object, std::size_t index, Object *value) {
+	OMR::GC::store(cx, object, OMR::GC::RefSlotHandle(&object->slots()[index]), value);
+}
+
 Object*
 allocate(OMR::GC::Context& cx, std::size_t nslots) {
 	const std::size_t size = Object::allocSize(nslots);
@@ -72,15 +78,20 @@ omr_main_entry(int argc, char ** argv, char **envp)
 	OMR::GC::System system(runtime);
 	OMR::GC::RunContext cx(system);
 
-	const std::uintptr_t size = 24;
+	const std::size_t nslots = 2;
 
-	for(int i = 0; i < 100000; ++i) {
-		OMR::GC::StackRoot<Object> root(cx,
-			OMR::GC::allocate<Object>(cx, size, [=](Object* obj) -> void {
-				new(obj) Object(size);
-		}));
+	OMR::GC::StackRoot<Object> rootA(cx, allocate(cx, nslots));
+	OMR::GC::StackRoot<Object> rootB(cx, nullptr);
+
+	while (true) {
+		for (int i = 0xB; i < 0xA0; i++) {
+			rootB = allocate(cx, nslots);
+			rootB->slots()[0] = i;
+			store(cx, rootB, 1, rootA);
+			store(cx, rootA, 1, rootB);
+		}
 	}
-
+	
 	OMR_GC_SystemCollect(cx.vm(), 0);
 
 	return 0;
