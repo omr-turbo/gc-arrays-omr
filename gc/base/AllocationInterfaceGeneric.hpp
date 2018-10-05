@@ -23,6 +23,12 @@
 #if !defined(ALLOCATIONINTERFACEGENERiC_HPP_)
 #define ALLOCATIONINTERFACEGENERiC_HPP_
 
+#include "omrcfg.h"
+
+#if defined(OMR_GC_EXPERIMENTAL_ALLOCATOR) 
+#error
+#else /* OMR_GC_EXPERIMENTAL_ALLOCATOR */
+
 #include "omr.h"
 
 #include "ObjectAllocationInterface.hpp"
@@ -65,5 +71,7 @@ protected:
 private:
 
 };
+
+#endif /* OMR_GC_EXPERIMENTAL_ALLOCATOR */
 
 #endif /*ALLOCATIONINTERFACEGENERiC_HPP_*/

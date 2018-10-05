@@ -58,8 +58,6 @@ add_library(omrgc_tracegen OBJECT
 
 add_library(omrgc STATIC
 	base/AddressOrderedListPopulator.cpp
-	base/AllocationContext.cpp
-	base/AllocationInterfaceGeneric.cpp
 	base/BaseVirtual.cpp
 	base/BumpAllocatedListPopulator.cpp
 	base/CardTable.cpp
@@ -191,6 +189,14 @@ add_library(omrgc STATIC
 	verbose/handler_standard/VerboseHandlerOutputStandard.cpp
 	$<TARGET_OBJECTS:omrgc_tracegen>
 )
+
+if (NOT OMR_GC_EXPERIMENTAL_CONTEXT)
+	target_sources(omrgc
+		PRIVATE
+			base/AllocationContext.cpp
+			base/AllocationInterfaceGeneric.cpp
+	)
+endif()
 
 if(OMR_GC_OBJECT_MAP)
 	target_sources(omrgc

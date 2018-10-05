@@ -24,6 +24,11 @@
 #define ALLOCATEDESCRIPTION_HPP_
 
 #include "omrcfg.h"
+
+// #if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+// #error "incompatible with experimental object scanner."
+// #else /* OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */
+
 #include "omrcomp.h"
 #include "modronbase.h"
 #include "objectdescription.h"
@@ -247,5 +252,7 @@ public:
 		, _completedFromTlh(false)
 	{}
 };
+
+// #endif /* OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */
 
 #endif /* ALLOCATEDESCRIPTION_HPP_ */

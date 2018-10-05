@@ -25,7 +25,7 @@
 
 #include <OMR/GC/MarkingFn.hpp>
 #include <OMR/GC/StackRootList.hpp>
-
+#include <OMR/GC/LocalHeapCache.hpp>
 #include <EnvironmentBase.hpp>
 #include <OMR/Runtime.hpp>
 #include <OMR_VMThread.hpp>
@@ -103,6 +103,7 @@ private:
 
 	void initGcSlaveThreads(StartupContext &cx);
 
+
 	Runtime *_runtime;
 	OMR_VM _vm;
 	MarkingFnVector _userRoots;
@@ -136,6 +137,14 @@ public:
 
 	const MarkingFnVector &markingFns() const noexcept { return _userMarkingFns; }
 
+	LocalHeapCache& heapCache() noexcept { return _heapCache; }
+
+	const LocalHeapCache& heapCache() const noexcept { return _heapCache; }
+
+	NonZeroLocalHeapCache& nonZeroHeapCache() noexcept { return _nonZeroHeapCache; }
+
+	const NonZeroLocalHeapCache& nonZeroHeapCache() const noexcept { return _nonZeroHeapCache; }
+
 private:
 	friend class RunContext;
 	friend class StartupContext;
@@ -144,6 +153,8 @@ private:
 
 	static void detachVmContext(OMR_VM &vm, Context &cx);
 
+	LocalHeapCache _heapCache;
+	NonZeroLocalHeapCache _nonZeroHeapCache;
 	Thread _thread;
 	System *_system;
 	OMR_VMThread *_vmContext; //< TODO: Delete this when we can.

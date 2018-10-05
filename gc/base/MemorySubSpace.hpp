@@ -26,12 +26,17 @@
 #include "omrcomp.h"
 #include "modronbase.h"
 
+#include "ut_j9mm.h"
 #include "AllocationFailureStats.hpp"
 #include "EnvironmentBase.hpp"
 #include "GCExtensionsBase.hpp"
 #include "LightweightNonReentrantLock.hpp"
 #include "MemorySpacesAPI.h"
 #include "ModronAssertions.h"
+
+#if defined(OMR_GC_EXPERIMENTAL_ALLOCATOR)
+#include <OMR/GC/AllocationResult.hpp>
+#endif /* OMR_GC_EXPERIMENTAL_ALLOCATOR */
 
 class GC_MemorySubSpaceRegionIterator;
 class MM_AllocateDescription;
@@ -344,8 +349,13 @@ public:
 	virtual void reset();
 	virtual void rebuildFreeList(MM_EnvironmentBase *env);
 
+// #if defined(OMR_GC_EXPERIMENTAL_ALLOCATOR)
+// 	virtual void payAllocationTax(MM_EnvironmentBase *env, MM_MemorySubSpace *baseSubSpace, const OMR::GC::AllocationTax& tax);
+// 	void payAllocationTax(MM_EnvironmentBase *env, const OMR::GC::AllocationTax& tax);
+// #else
 	virtual void payAllocationTax(MM_EnvironmentBase *env, MM_MemorySubSpace *baseSubSpace, MM_AllocateDescription *allocDescription);
 	void payAllocationTax(MM_EnvironmentBase *env, MM_AllocateDescription *allocDescription);
+// #endif
 
 	void reportAllocationFailureStart(MM_EnvironmentBase *env, MM_AllocateDescription *allocDescription);
 	void reportAllocationFailureEnd(MM_EnvironmentBase *env);

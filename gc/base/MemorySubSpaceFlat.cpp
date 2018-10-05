@@ -21,7 +21,12 @@
  *******************************************************************************/
 
 
+#include "ut_j9mm.h"
+
+
 #include "omrcfg.h"
+
+
 #include "modronopt.h"
 #include "ModronAssertions.h"
 

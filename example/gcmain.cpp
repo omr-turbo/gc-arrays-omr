@@ -21,19 +21,21 @@
 
 #include <omrcfg.h>
 
-#include "ObjectAllocationModel.hpp"
+
 #include "omrgc.h"
 
 #if defined(OMR_GC_EXPERIMENTAL_CONTEXT)
 #include <OMR/Runtime.hpp>
 #include <OMR/GC/System.hpp>
 #include <OMR/GC/StackRoot.hpp>
+#include <OMR/GC/Allocator.hpp>
 #else /* OMR_GC_EXPERIMENTAL_CONTEXT */
 #include <string.h>
 #include "omrport.h"
 #include "ModronAssertions.h"
 /* OMR Imports */
 #include "AllocateDescription.hpp"
+#include "ObjectAllocationModel.hpp"
 #include "CollectorLanguageInterfaceImpl.hpp"
 #include "Configuration.hpp"
 #include "EnvironmentBase.hpp"
@@ -49,6 +51,16 @@
 #include "omrExampleVM.hpp"
 #endif /* OMR_GC_EXPERIMENTAL_CONTEXT */
 
+#if defined(OMR_GC_EXPERIMENTAL_CONTEXT)
+Object*
+allocate(OMR::GC::Context& cx, std::size_t nslots) {
+	const std::size_t size = Object::allocSize(nslots);
+	return OMR::GC::allocate<Object>(cx, size, [=](Object* obj) -> void {
+			new(obj) Object(size);
+	});
+}
+#endif /* OMR_GC_EXPERIMENTAL_CONTEXT */
+
 extern "C" {
 
 int
@@ -60,9 +72,14 @@ omr_main_entry(int argc, char ** argv, char **envp)
 	OMR::GC::System system(runtime);
 	OMR::GC::RunContext cx(system);
 
-	const std::uintptr_t allocSize = 24;
-	MM_ObjectAllocationModel allocationModel(cx.env(), allocSize, 0);
-	OMR::GC::StackRoot<void> root(cx, OMR_GC_AllocateObject(cx.vm(), &allocationModel));
+	const std::uintptr_t size = 24;
+
+	for(int i = 0; i < 100000; ++i) {
+		OMR::GC::StackRoot<Object> root(cx,
+			OMR::GC::allocate<Object>(cx, size, [=](Object* obj) -> void {
+				new(obj) Object(size);
+		}));
+	}
 
 	OMR_GC_SystemCollect(cx.vm(), 0);
 

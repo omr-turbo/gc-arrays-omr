@@ -24,6 +24,8 @@
 #include "omrcfg.h"
 #include "modronopt.h"
 
+#include "ut_j9mm.h"
+
 #include "MemorySubSpaceGeneric.hpp"
 
 #include "AllocateDescription.hpp"

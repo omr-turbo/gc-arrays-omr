@@ -18,6 +18,7 @@
 #
 # SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
 ###############################################################################
+
 include(OmrAssert)
 
 omr_assert(TEST OMR_GC_EXPERIMENTAL_CONTEXT)
@@ -32,6 +33,13 @@ target_sources(omrgc
 		${CMAKE_CURRENT_SOURCE_DIR}/glue/MarkingDelegate.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/glue/EnvironmentDelegate.cpp
 )
+
+if(OMR_GC_EXPERIMENTAL_ALLOCATOR)
+	target_sources(omrgc
+		PRIVATE
+			${CMAKE_CURRENT_SOURCE_DIR}/src/OMR_GC_Allocator.cpp
+	)
+endif()
 
 target_include_directories(omrgc
 	PUBLIC

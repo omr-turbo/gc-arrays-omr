@@ -1068,7 +1068,35 @@ MM_MemorySubSpace::allocateGeneric(MM_EnvironmentBase* env, MM_AllocateDescripti
 	return result;
 }
 
-#if defined(OMR_GC_ALLOCATION_TAX)
+// #if defined(OMR_GC_ALLOCATION_TAX)
+// #if defined(OMR_GC_EXPERIMENTAL_ALLOCATOR)
+
+// void
+// MM_MemorySubSpace::payAllocationTax(MM_EnvironmentBase* env, const OMR::GC::AllocationTax& tax)
+// {
+// 	payAllocationTax(env, this, tax);
+// }
+
+// void
+// MM_MemorySubSpace::payAllocationTax(MM_EnvironmentBase* env, MM_MemorySubSpace* baseSubSpace, const OMR::GC::AllocationTax& tax) {
+// 	if (_extensions->payAllocationTax) {
+// 		if (_parent) {
+// 			_parent->payAllocationTax(env, baseSubSpace, tax);
+// 		} else {
+// 			Assert_MM_true(_usesGlobalCollector); /* If you don't have a parent, you really should be using the global */
+// 			if (_usesGlobalCollector) {
+// 				_collector->payAllocationTax(env, this, baseSubSpace, tax);
+// 			}
+// 		}
+// 	}
+// }
+
+// #else /* OMR_GC_EXPERIMENTAL_ALLOCATOR */
+
+// static void xxxxx(MM_EnvironmentBase* env, MM_MemorySubSpace* target, MM_MemorySubSpace* baseSubSpace, MM_AllocateDescription* allocDescription) {
+// 	target->payAllocationTax(env, baseSubSpace, allocDescription);
+// }
+
 /**
  * Pay the allocation tax for the mutator.
  * @note Public entry point for paying an allocation tax.
@@ -1076,7 +1104,9 @@ MM_MemorySubSpace::allocateGeneric(MM_EnvironmentBase* env, MM_AllocateDescripti
 void
 MM_MemorySubSpace::payAllocationTax(MM_EnvironmentBase* env, MM_AllocateDescription* allocDescription)
 {
-	payAllocationTax(env, this, allocDescription);
+	fprintf(stderr, "***** payAllocationTax 1\n");
+	this->payAllocationTax(env, this, allocDescription);
+	fprintf(stderr, "***** payAllocationTax 3\n");
 }
 
 /**
@@ -1085,6 +1115,8 @@ MM_MemorySubSpace::payAllocationTax(MM_EnvironmentBase* env, MM_AllocateDescript
 void
 MM_MemorySubSpace::payAllocationTax(MM_EnvironmentBase* env, MM_MemorySubSpace* baseSubSpace, MM_AllocateDescription* allocDescription)
 {
+	fprintf(stderr, "***** payAllocationTax 2\n");
+
 	if (_extensions->payAllocationTax) {
 		if (_parent) {
 			_parent->payAllocationTax(env, baseSubSpace, allocDescription);
@@ -1096,7 +1128,9 @@ MM_MemorySubSpace::payAllocationTax(MM_EnvironmentBase* env, MM_MemorySubSpace* 
 		}
 	}
 }
-#endif /* OMR_GC_ALLOCATION_TAX */
+
+// #endif /* OMR_GC_EXPERIMENTAL_ALLOCATOR */
+// #endif /* OMR_GC_ALLOCATION_TAX */
 
 /**
  * Set whether resizing is available on the receivers PSA.

@@ -50,6 +50,8 @@ class PlatformError : public std::exception
 public:
 	PlatformError(int error) : _error(error) {}
 
+	int error() noexcept { return _error; }
+
 private:
 	int _error;
 };
