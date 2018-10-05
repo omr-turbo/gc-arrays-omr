@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2017 IBM Corp. and others
+ * Copyright (c) 2013, 2018 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -90,6 +90,8 @@ omr_main_entry(int argc, char ** argv, char **envp)
 			store(cx, rootB, 1, rootA);
 			store(cx, rootA, 1, rootB);
 		}
+		OMR_GC_SystemCollect(cx.vm(), 0);
+		OMR_GC_SystemCollect(cx.vm(), 0);
 	}
 	
 	OMR_GC_SystemCollect(cx.vm(), 0);

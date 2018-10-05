@@ -446,7 +446,7 @@ MM_ParallelGlobalGC::masterThreadGarbageCollect(MM_EnvironmentBase *env, MM_Allo
 	 */
 	if (_delegate.isAllowUserHeapWalk() || env->_cycleState->_gcCode.isRASDumpGC()) {
 		if (!_fixHeapForWalkCompleted) {
-#if defined(J9VM_GC_MODRON_COMPACTION)
+#if defined(OMR_GC_MODRON_COMPACTION)
 			if (compactedThisCycle) {
 				OMRPORT_ACCESS_FROM_ENVIRONMENT(env);
 				U_64 startTime = omrtime_hires_clock();
@@ -454,7 +454,7 @@ MM_ParallelGlobalGC::masterThreadGarbageCollect(MM_EnvironmentBase *env, MM_Allo
 				_extensions->globalGCStats.fixHeapForWalkTime = omrtime_hires_delta(startTime, omrtime_hires_clock(), OMRPORT_TIME_DELTA_IN_MICROSECONDS);
 				_extensions->globalGCStats.fixHeapForWalkReason = FIXUP_DEBUG_TOOLING;
 			} else
-#endif /* J9VM_GC_MODRON_COMPACTION */
+#endif /* OMR_GC_MODRON_COMPACTION */
 			{
 				fixHeapForWalk(env, MEMORY_TYPE_RAM, FIXUP_DEBUG_TOOLING, fixObject);
 			}

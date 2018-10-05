@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 1991, 2016 IBM Corp. and others
+ * Copyright (c) 1991, 2086 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -22,6 +22,8 @@
 #ifndef COMPACTSCHEMEOBJECTFIXUP_HPP_
 #define COMPACTSCHEMEOBJECTFIXUP_HPP_
 
+#include <cstdio>
+
 #include "omrcfg.h"
 #include "objectdescription.h"
 
@@ -34,11 +36,9 @@ class MM_CompactSchemeFixupObject {
 public:
 protected:
 private:
-	/*
 	OMR_VM *_omrVM;
 	MM_GCExtensionsBase *_extensions;
 	MM_CompactScheme *_compactScheme;
-	*/
 public:
 
 	/**
@@ -46,15 +46,20 @@ public:
 	 * @param env[in] the current thread
 	 * @param objectPtr pointer to object for fixup
 	 */
-	void fixupObject(MM_EnvironmentStandard *env, omrobjectptr_t objectPtr);
+	void fixupObject(MM_EnvironmentStandard *env, omrobjectptr_t objectPtr)
+	{
+		CompactingVisitor visitor(_compactScheme);
+		OMRClient::GC::ObjectScanner scanner = _extensions->objectModel.makeObjectScanner();
+		scanner.start(visitor, objectPtr);
+	}
 
-	static void verifyForwardingPtr(omrobjectptr_t objectPtr, omrobjectptr_t forwardingPtr);
+	static void verifyForwardingPtr(omrobjectptr_t objectPtr, omrobjectptr_t forwardingPtr) {}
 
 	MM_CompactSchemeFixupObject(MM_EnvironmentBase* env, MM_CompactScheme *compactScheme)
-/*	:
+	:
 		_omrVM(env->getOmrVM()),
 		_extensions(env->getExtensions()),
-		_compactScheme(compactScheme)*/
+		_compactScheme(compactScheme)
 	{}
 
 protected:

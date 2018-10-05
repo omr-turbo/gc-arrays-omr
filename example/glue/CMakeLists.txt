@@ -29,7 +29,6 @@ add_library(omr_example_gc_glue INTERFACE)
 
 target_sources(omr_example_gc_glue INTERFACE
 	${CMAKE_CURRENT_SOURCE_DIR}/CollectorLanguageInterfaceImpl.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/CompactSchemeFixupObject.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/ConcurrentMarkingDelegate.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/FrequentObjectsStats.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/GlobalCollectorDelegate.cpp
@@ -40,6 +39,7 @@ target_sources(omr_example_gc_glue INTERFACE
 
 if(NOT OMR_GC_EXPERIMENTAL_CONTEXT)
 	target_sources(omr_example_gc_glue INTERFACE
+		${CMAKE_CURRENT_SOURCE_DIR}/CompactSchemeFixupObject.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/EnvironmentDelegate.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/MarkingDelegate.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/ObjectIterator.cpp

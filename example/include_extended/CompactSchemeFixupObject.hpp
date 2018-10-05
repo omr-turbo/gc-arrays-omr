@@ -18,24 +18,49 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
+ 
+#ifndef COMPACTSCHEMEOBJECTFIXUP_HPP_
+#define COMPACTSCHEMEOBJECTFIXUP_HPP_
 
-#include "omr.h"
+#include "omrcfg.h"
 #include "objectdescription.h"
 
-#include "CompactSchemeFixupObject.hpp"
-#include "EnvironmentStandard.hpp"
+#include "CompactScheme.hpp"
+#include "GCExtensionsBase.hpp"
 
 #if defined(OMR_GC_MODRON_COMPACTION)
 
-void
-MM_CompactSchemeFixupObject::fixupObject(MM_EnvironmentStandard *env, omrobjectptr_t objectPtr)
-{
-}
+class MM_CompactSchemeFixupObject {
+public:
+protected:
+private:
+	/*
+	OMR_VM *_omrVM;
+	MM_GCExtensionsBase *_extensions;
+	MM_CompactScheme *_compactScheme;
+	*/
+public:
 
+	/**
+	 * Perform fixup for a single object
+	 * @param env[in] the current thread
+	 * @param objectPtr pointer to object for fixup
+	 */
+	void fixupObject(MM_EnvironmentStandard *env, omrobjectptr_t objectPtr);
 
-void
-MM_CompactSchemeFixupObject::verifyForwardingPtr(omrobjectptr_t objectPtr, omrobjectptr_t forwardingPtr)
-{
-}
+	static void verifyForwardingPtr(omrobjectptr_t objectPtr, omrobjectptr_t forwardingPtr);
+
+	MM_CompactSchemeFixupObject(MM_EnvironmentBase* env, MM_CompactScheme *compactScheme)
+/*	:
+		_omrVM(env->getOmrVM()),
+		_extensions(env->getExtensions()),
+		_compactScheme(compactScheme)*/
+	{}
+
+protected:
+private:
+};
 
 #endif /* OMR_GC_MODRON_COMPACTION */
+
+#endif /* COMPACTSCHEMEOBJECTFIXUP_HPP_ */

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 1991, 2016 IBM Corp. and others
+ * Copyright (c) 1991, 2018 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -34,19 +34,42 @@
 #include "GCExtensionsBase.hpp"
 #include "Heap.hpp"
 #include "HeapRegionManager.hpp"
-#include "MarkingScheme.hpp"
 #include "MarkMap.hpp"
+#include "MarkingScheme.hpp"
+
+#if !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
 #include "SlotObject.hpp"
+#endif /* !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER) */
 #include "CompactDelegate.hpp"
 
+class CompactTableEntry;
 class MM_AllocateDescription;
-class MM_EnvironmentStandard;
+class MM_CompactScheme;
+class MM_Compactionscheme;
 class MM_Dispatcher;
+class MM_EnvironmentStandard;
 class MM_Heap;
 class MM_HeapRegionDescriptorStandard;
 class MM_MemoryPool;
 class MM_MemorySubSpace;
-class CompactTableEntry;
+
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+
+class CompactingVisitor {
+public:
+	constexpr explicit CompactingVisitor(MM_CompactScheme *compactScheme) :
+		_compactScheme(compactScheme)
+		{}
+
+	CompactingVisitor(const CompactingVisitor&) = delete;
+
+	template <class SlotHandleT>
+	bool edge(void* object, SlotHandleT slot) noexcept;
+
+    MM_CompactScheme * _compactScheme;
+};
+
+#endif /* defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER) */
 
 class MM_CompactMemoryPoolState : public MM_BaseVirtual
 {
@@ -302,6 +325,7 @@ protected:
      * @return true if the action was changed, or false if another thread already changed it to newAction
      */
     bool changeSubAreaAction(MM_EnvironmentBase *env, SubAreaEntry * entry, uintptr_t newAction);
+
 public:
 	static MM_CompactScheme *newInstance(MM_EnvironmentBase *env, MM_MarkingScheme *markingScheme);
 	
@@ -315,11 +339,27 @@ public:
 	void fixHeapForWalk(MM_EnvironmentBase *env);
 	void parallelFixHeapForWalk(MM_EnvironmentBase *env);
 
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+	/**
+	 * Perform fixup for a single object slot
+	 * @param slotObject pointer to slotObject for fixup
+	 */
+	template<typename SlotHandleT>
+	void
+	fixupObjectSlot(SlotHandleT slot)
+	{
+        omrobjectptr_t forwardedPtr = getForwardingPtr(slot.readReference());
+        slot.writeReference(forwardedPtr);
+        return;
+	}
+
+#else /* defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER) */
 	/**
 	 * Perform fixup for a single object slot
 	 * @param slotObject pointer to slotObject for fixup
 	 */
 	void fixupObjectSlot(GC_SlotObject* slotObject);
+#endif /* defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER) */
 	
 	MMINLINE void setMarkMap(MM_MarkMap *markMap) {	_markMap = markMap;}
 
@@ -340,6 +380,16 @@ public:
     	_typeId = __FUNCTION__;
     }
 };
+
+#if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
+
+template <class SlotHandleT>
+bool CompactingVisitor::edge(void* object, SlotHandleT slot) noexcept {
+    _compactScheme->fixupObjectSlot(slot);
+    return true;
+}
+
+#endif /* defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER) */
 
 #endif /* OMR_GC_MODRON_COMPACTION */
 #endif /* COMPACTSCHEMEBASE_HPP_ */

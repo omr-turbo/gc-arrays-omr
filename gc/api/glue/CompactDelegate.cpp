@@ -29,12 +29,11 @@
 #include "EnvironmentBase.hpp"
 #include "omr.h"
 #include "omrcfg.h"
-#include "omrhashtable.h"
+#include "SublistSlotIterator.hpp"
+#include "SublistPuddle.hpp"
+#include "SublistPool.hpp"
+#include "SublistIterator.hpp"
 #include <iostream>
-
-#if !defined(OMR_GC_MODRON_COMPACTION)
-#error "This file requires OMR_GC_MODRON_COMPACTION"
-#endif
 
 namespace OMR
 {
@@ -44,7 +43,8 @@ namespace GC
 void
 CompactDelegate::fixupRoots(MM_EnvironmentBase *env, MM_CompactScheme *compactScheme) {
     auto &cx = getContext(env);
-    CompactingVisitor visitor((MM_EnvironmentStandard *) env, _compactScheme);
+
+    CompactingVisitor visitor(_compactScheme);
 
     /// System-wide roots
 
@@ -52,11 +52,16 @@ CompactDelegate::fixupRoots(MM_EnvironmentBase *env, MM_CompactScheme *compactSc
         fn(visitor);
     }
 
+
+#if defined(OMR_GC_MODRON_SCAVENGER)
+    fixupRememberedSet(env, compactScheme);
+#endif // OMR_GC_MODRON_SCAVENGER
+
     /// Per-context roots
 
     // Note: only scanning the stack roots for *one* context.
     for (StackRootListNode &node : cx.stackRoots()) {
-        visitor.edge(NULL, RefSlotHandle((omrobjectptr_t*)&node.ref));
+        visitor.edge(NULL, RefSlotHandle((fomrobject_t *)&node.ref));
     }
 
     for (auto &fn : cx.compactingFns()) {
@@ -64,6 +69,27 @@ CompactDelegate::fixupRoots(MM_EnvironmentBase *env, MM_CompactScheme *compactSc
     }
 }
 
+#if defined(OMR_GC_MODRON_SCAVENGER)
+/// Fixup the remembered set.
+/// The remembered set contains objects
+void
+CompactDelegate::fixupRememberedSet(MM_EnvironmentBase* env, MM_CompactScheme* compactScheme) {
+    CompactingVisitor visitor(compactScheme);
+
+    GC_SublistIterator rememberedSetIterator(&env->getExtensions()->rememberedSet);
+    MM_SublistPuddle *puddle = nullptr;
+
+    while((puddle = rememberedSetIterator.nextList()) != NULL) {
+        GC_SublistSlotIterator rememberedSetSlotIterator(puddle);
+        omrobjectptr_t *slot;
+        while((slot = (omrobjectptr_t *)rememberedSetSlotIterator.nextSlot()) != NULL) {
+            if (*slot) {
+                visitor.edge(NULL, RefSlotHandle(slot));
+            }
+        }
+    }
+}
+#endif // defined(OMR_GC_MODRON_SCAVENGER)
+
 } // namespace GC
 } // namespace OMR
-

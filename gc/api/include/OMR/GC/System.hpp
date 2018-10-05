@@ -23,6 +23,7 @@
 #if !defined(OMR_GC_SYSTEM_HPP_)
 #define OMR_GC_SYSTEM_HPP_
 
+#include <OMR/GC/CompactingFn.hpp>
 #include <OMR/GC/MarkingFn.hpp>
 #include <OMR/GC/ScavengingFn.hpp>
 #include <OMR/GC/StackRootList.hpp>
@@ -92,6 +93,10 @@ public:
 
 	const ScavengingFnVector &scavengingFns() const noexcept { return _scavengingFns; }
 
+	CompactingFnVector &compactingFns() noexcept { return _compactingFns; }
+
+	const CompactingFnVector &compactingFns() const noexcept { return _compactingFns; }
+
 	ContextSet &contexts() { return _contexts; }
 
 	const ContextSet &contexts() const { return _contexts; }
@@ -113,6 +118,7 @@ private:
 	OMR_VM _vm;
 	MarkingFnVector _userRoots;
 	ScavengingFnVector _scavengingFns;
+	CompactingFnVector _compactingFns;
 	ContextSet _contexts;
 };
 
@@ -139,6 +145,10 @@ public:
 	MarkingFnVector &markingFns() noexcept { return _userMarkingFns; }
 
 	const MarkingFnVector &markingFns() const noexcept { return _userMarkingFns; }
+
+	CompactingFnVector &compactingFns() noexcept { return _compactingFns; }
+
+	const CompactingFnVector &compactingFns() const noexcept { return _compactingFns; }
 
 	ScavengingFnVector &scavengingFns() noexcept { return _scavengingFns; }
 
@@ -168,6 +178,7 @@ private:
 	StackRootList _stackRoots;
 	MarkingFnVector _userMarkingFns;
 	ScavengingFnVector _scavengingFns;
+	CompactingFnVector _compactingFns;
 
 };
 

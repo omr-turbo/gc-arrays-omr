@@ -41,6 +41,13 @@ if(OMR_GC_EXPERIMENTAL_ALLOCATOR)
 	)
 endif()
 
+if(OMR_GC_MODRON_COMPACTION)
+	target_sources(omrgc
+		PRIVATE
+			${CMAKE_CURRENT_SOURCE_DIR}/glue/CompactDelegate.cpp
+	)
+endif()
+
 target_include_directories(omrgc
 	PUBLIC
 		glue/

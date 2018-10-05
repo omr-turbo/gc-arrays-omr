@@ -265,9 +265,9 @@ MM_StartupManager::handleOption(MM_GCExtensionsBase *extensions, char *option)
 #if defined(OMR_GC_MODRON_COMPACTION)
 	else if (0 == strncmp(option, OMR_XCOMPACTGC, OMR_XCOMPACTGC_LENGTH)) {
 		extensions->noCompactOnGlobalGC = 0;
-		extensions->compactOnGlobalGC = 0;
+		extensions->compactOnGlobalGC = 1;
 		extensions->nocompactOnSystemGC = 0;
-		extensions->compactOnSystemGC = 0;
+		extensions->compactOnSystemGC = 1;
 	}
 #endif /* OMR_GC_MODRON_COMPACTION */
 	else if (0 == strncmp(option, OMR_XVERBOSEGCLOG, OMR_XVERBOSEGCLOG_LENGTH)) {

@@ -105,8 +105,14 @@ heapWalkerObjectSlotDo(OMR_VM *omrVM, omrobjectptr_t object, MM_HeapWalkerSlotFu
 	visitor.data = localUserData;
 
 	OMRClient::GC::ObjectScanner scanner = MM_GCExtensionsBase::getExtensions(omrVM)->objectModel.makeObjectScanner();
+
+#if defined(DEBUG)
 	OMR::GC::ScanResult result = scanner.start(visitor, object);
 	assert(result.complete);
+#else
+	scanner.start(visitor, object);
+#endif
+
 #else /* OMR_GC_EXPERIMENTAL_OBJECT_SCANNER */
 	GC_ObjectIterator objectIterator(omrVM, object);
 	GC_SlotObject *slotObject;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 1991, 2017 IBM Corp. and others
+ * Copyright (c) 1991, 2018 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -54,7 +54,9 @@
 #include "ObjectModel.hpp"
 #include "ParallelSweepScheme.hpp"
 #include "ParallelTask.hpp"
+#if !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
 #include "SlotObject.hpp"
+#endif /* !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER) */
 #include "SublistPool.hpp"
 #include "SublistPuddle.hpp"
 #include "SweepHeapSectioning.hpp"
@@ -1360,12 +1362,14 @@ MM_CompactScheme::fixupObjects(MM_EnvironmentStandard *env, uintptr_t& objectCou
 	}
 }
 
+#if !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
 void
 MM_CompactScheme::fixupObjectSlot(GC_SlotObject* slotObject)
 {
 	omrobjectptr_t forwardedPtr = getForwardingPtr(slotObject->readReferenceFromSlot());
 	slotObject->writeReferenceToSlot(forwardedPtr);
 }
+#endif /* !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER) */
 
 void
 MM_CompactScheme::fixupSubArea(MM_EnvironmentStandard *env, omrobjectptr_t firstObject, omrobjectptr_t finish,  bool markedOnly, uintptr_t& objectCount)

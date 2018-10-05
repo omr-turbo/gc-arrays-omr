@@ -962,8 +962,6 @@ public:
 
 #if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
 
-#include <iostream>
-
 template <class SlotHandleT>
 bool ScavengingObjectVisitor::edge(void* object, SlotHandleT slot) noexcept {
 
