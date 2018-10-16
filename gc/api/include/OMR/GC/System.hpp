@@ -30,6 +30,7 @@
 #include <OMR/GC/LocalHeapCache.hpp>
 #include <EnvironmentBase.hpp>
 #include <OMR/Runtime.hpp>
+#include <OMR/IntrusiveList.hpp>
 #include <OMR_VMThread.hpp>
 #include <cstddef>
 #include <cstdint>
@@ -37,9 +38,7 @@
 #include <mminitcore.h>
 #include <new>
 #include <omrutil.h>
-#include <set>
 #include <type_traits>
-#include <unordered_set>
 
 class MM_EnvironmentBase;
 
@@ -49,8 +48,8 @@ namespace GC
 {
 
 class Visitor;
+class ContextBase;
 class Context;
-class RunContext;
 class StartupContext;
 
 class StartupError : public ::std::runtime_error
@@ -58,13 +57,9 @@ class StartupError : public ::std::runtime_error
 	using runtime_error::runtime_error;
 };
 
-using ContextSet = ::std::set<Context *>;
-
-void
-attachVmContext(OMR_VM &vm, Context &cx);
-
-void
-detachVmContext(OMR_VM &vm, Context &cx);
+using ContextList = IntrusiveList<Context>;
+using ContextListNode = ContextList::Node;
+using ContextListIterator = ContextList::Iterator;
 
 /// A GC subsystem.
 class System
@@ -97,9 +92,9 @@ public:
 
 	const CompactingFnVector &compactingFns() const noexcept { return _compactingFns; }
 
-	ContextSet &contexts() { return _contexts; }
+	ContextList &contexts() { return _contexts; }
 
-	const ContextSet &contexts() const { return _contexts; }
+	const ContextList &contexts() const { return _contexts; }
 
 protected:
 	friend class Context;
@@ -116,29 +111,56 @@ private:
 
 	Runtime *_runtime;
 	OMR_VM _vm;
+	ContextList _contexts;
 	MarkingFnVector _userRoots;
 	ScavengingFnVector _scavengingFns;
 	CompactingFnVector _compactingFns;
-	ContextSet _contexts;
 };
 
-/// A GC context. Base class. GC users should create RunContexts.
-class Context
+/// A GC context. Base class. GC users should create Contexts.
+class ContextBase
 {
 public:
 	static constexpr const char *THREAD_NAME = "OMR::GC::Context";
 
-	explicit inline Context(System &system);
-
-	Context(const Context &other) = delete;
-
-	inline ~Context() noexcept;
-
 	System &system() const noexcept { return *_system; }
 
-	inline MM_EnvironmentBase *env() const noexcept;
+	MM_EnvironmentBase *env() const noexcept { return MM_EnvironmentBase::getEnvironment(vmContext()); }
 
-	inline OMR_VMThread *vm() const noexcept { return _vmContext; }
+	OMR_VMThread *vmContext() const noexcept { return _vmContext; }
+
+protected:
+	ContextBase(System &system)
+	    : _thread(system.runtime().platform().thread()), _system(&system), _vmContext(nullptr)
+	{
+		attachVmContext(system.vm(), *this);
+	}
+
+	~ContextBase() noexcept {
+		detachVmContext(_system->vm(), *this);
+		_system = nullptr;
+		_vmContext = nullptr;
+	}
+
+private:
+	Thread _thread;
+	System *_system;
+	OMR_VMThread *_vmContext; //< TODO: Delete this when we can.
+
+	static void attachVmContext(OMR_VM &vm, ContextBase &cx);
+
+	static void detachVmContext(OMR_VM &vm, ContextBase &cx);
+};
+
+class Context : public ContextBase {
+public:
+	explicit inline Context(System& system) : ContextBase(system) {
+		system.contexts().add(this);
+	}
+
+	~Context() noexcept {
+		system().contexts().remove(this);
+	}
 
 	StackRootList &stackRoots() noexcept { return _stackRoots; }
 
@@ -162,48 +184,25 @@ public:
 
 	const NonZeroLocalHeapCache& nonZeroHeapCache() const noexcept { return _nonZeroHeapCache; }
 
+	ContextListNode& node() noexcept { return _node; }
+
+	const ContextListNode& node() const noexcept { return _node; }
+
 private:
-	friend class RunContext;
-	friend class StartupContext;
-
-	static void attachVmContext(OMR_VM &vm, Context &cx);
-
-	static void detachVmContext(OMR_VM &vm, Context &cx);
-
 	LocalHeapCache _heapCache;
 	NonZeroLocalHeapCache _nonZeroHeapCache;
-	Thread _thread;
-	System *_system;
-	OMR_VMThread *_vmContext; //< TODO: Delete this when we can.
+	ContextListNode _node;
 	StackRootList _stackRoots;
 	MarkingFnVector _userMarkingFns;
 	ScavengingFnVector _scavengingFns;
 	CompactingFnVector _compactingFns;
-
 };
 
-static_assert(std::is_standard_layout<Context>::value,
-              "The GC context must be a StandardLayoutType for calculating JIT offsets.");
+// static_assert(std::is_standard_layout<Context>::value,
+//               "The GC context must be a StandardLayoutType for calculating JIT offsets.");
 
-inline Context::Context(System &system)
-        : _thread(system.runtime().platform().thread()), _system(&system), _vmContext(nullptr)
-{
-	_system->contexts().insert(this);
-	attachVmContext(system.vm(), *this);
-}
-
-inline Context::~Context() noexcept
-{
-	_system->contexts().erase(this);
-	detachVmContext(_system->vm(), *this);
-	_vmContext = nullptr;
-}
-
-inline MM_EnvironmentBase *
-Context::env() const noexcept
-{
-	return MM_EnvironmentBase::getEnvironment(vm());
-}
+/// Backwards compatible alias
+using RunContext = Context;
 
 /// A special limited context that is only used during startup or shutdown.
 class StartupContext : public Context
@@ -215,13 +214,6 @@ private:
 	StartupContext(System &system) : Context(system) {}
 
 	StartupContext(const StartupContext &other) = delete;
-};
-
-/// A full runtime context.
-class RunContext : public Context
-{
-public:
-	RunContext(System &system) : Context(system) {}
 };
 
 /// @group Context conversion routines

@@ -105,7 +105,7 @@ System::initGcSlaveThreads(StartupContext &cx)
 
 /// Note:
 void
-Context::attachVmContext(OMR_VM &vm, Context &cx)
+ContextBase::attachVmContext(OMR_VM &vm, ContextBase &cx)
 {
 	omrthread_t self = nullptr;
 
@@ -145,7 +145,7 @@ Context::attachVmContext(OMR_VM &vm, Context &cx)
 }
 
 void
-Context::detachVmContext(OMR_VM &vm, Context &cx)
+ContextBase::detachVmContext(OMR_VM &vm, ContextBase &cx)
 {
 	omrthread_t self;
 
