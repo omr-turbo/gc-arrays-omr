@@ -42,6 +42,8 @@ class RefSlotHandle
 public:
 	RefSlotHandle(omrobjectptr_t *slot) : _slot(slot) {}
 
+	void *toAddress() const noexcept { return _slot; }
+
 	omrobjectptr_t readReference() const noexcept { return *_slot; }
 
 	void writeReference(omrobjectptr_t value) const noexcept { *_slot = value; }
