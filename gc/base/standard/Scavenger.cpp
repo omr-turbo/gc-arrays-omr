@@ -1807,7 +1807,6 @@ MM_Scavenger::scavengeObjectSlots(MM_EnvironmentStandard *env, MM_CopyScanCacheS
 
 	return shouldRemember;
 }
-#endif /* !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER) */
 
 /**
  * Scans the slots of a non-indexable object, remembering objects as required. Scanning is interrupted
@@ -1912,6 +1911,8 @@ MM_Scavenger::incrementalScavengeObjectSlots(MM_EnvironmentStandard *env, omrobj
 
 	return NULL;
 }
+
+#endif /* !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER) */
 
 /****************************************
  * Scan completion routines

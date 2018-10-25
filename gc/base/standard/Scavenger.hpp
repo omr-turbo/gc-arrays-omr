@@ -433,10 +433,11 @@ public:
 
 #endif /* !defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER) */
 
+	MMINLINE uintptr_t copyCacheDistanceMetric(MM_CopyScanCacheStandard* cache);
+
 #if defined(OMR_GC_EXPERIMENTAL_OBJECT_SCANNER)
 	MMINLINE uintptr_t scanCacheDistanceMetric(MM_CopyScanCacheStandard* cache, void *scanSlot);
 #else
-	MMINLINE uintptr_t copyCacheDistanceMetric(MM_CopyScanCacheStandard* cache);
 	MMINLINE uintptr_t scanCacheDistanceMetric(MM_CopyScanCacheStandard* cache, GC_SlotObject* scanSlot);
 #endif
 
