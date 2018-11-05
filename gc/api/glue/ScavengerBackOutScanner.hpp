@@ -24,7 +24,6 @@
 
 #include "omr.h"
 #include "omrcfg.h"
-#include "omrExampleVM.hpp"
 #include "omrhashtable.h"
 
 #include "Base.hpp"
